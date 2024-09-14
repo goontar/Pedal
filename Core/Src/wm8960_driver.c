@@ -6,15 +6,34 @@ I2C_HandleTypeDef* i2c_handler;
 bool wm8960__setup_i2c(I2C_HandleTypeDef* hi2c)
 {
 	i2c_handler = hi2c;
+	memcpy(_registerLocalCopy, _registerDefaults, sizeof(_registerDefaults));
+
 	return true;
 }
 
-bool _writeRegister(int address, int data)
+bool _writeRegister(uint8_t address, uint16_t data)
 {
 	uint8_t message[2] = {0};
-	message[0] = address;
-	message[1] = data;
-	HAL_I2C_Master_Transmit(i2c_handler, DEVICE_ADDRESS, message, 2, DEFAULT_I2C_TIMEOUT); //Sending in Blocking mode
+	HAL_StatusTypeDef status = HAL_OK;
+	uint8_t result;
+
+	// Shift reg over one spot to make room for the 9th bit of register data
+	uint8_t control_byte_1 = (address << 1);
+
+	// Shift value so only 9th bit is still there, plug it into 0th bit of
+	// control_byte_1
+	control_byte_1 |= (data>> 8);
+
+	uint8_t control_byte_2 = (uint8_t)(data & 0xFF);
+
+	message[0] = control_byte_1;
+	message[1] = control_byte_2;
+
+	status = HAL_I2C_Master_Transmit(i2c_handler, DEVICE_ADDRESS, message, 2, DEFAULT_I2C_TIMEOUT); //Sending in Blocking mode
+	if(status != HAL_OK)
+	{
+		return false;
+	}
 	return true;
 }
 
@@ -43,7 +62,7 @@ bool _writeRegisterBit(uint8_t registerAddress, uint8_t bitNumber, bool bitValue
 }
 
 
-bool _writeRegisterMultiBits(uint8_t registerAddress, uint8_t settingMsbNum, uint8_t settingLsbNum, uint8_t setting)
+int _writeRegisterMultiBits(uint8_t registerAddress, uint8_t settingMsbNum, uint8_t settingLsbNum, uint8_t setting)
 {
   uint8_t numOfBits = (settingMsbNum - settingLsbNum) + 1;
 

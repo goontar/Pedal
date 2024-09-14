@@ -90,9 +90,36 @@ int main(void)
   MX_GPIO_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+  bool status = true;
 
-  wm8960__setup_i2c(&hi2c1);
-  uint8_t data = 2;
+  status = wm8960__setup_i2c(&hi2c1);
+
+
+  // General setup needed
+  status = wm8960__enableVREF();
+  status = wm8960__enableVMID();
+
+  // Setup signal flow through the analog audio bypass connections
+
+  // Enable left output mixer
+  status = wm8960__enableLOMIX();
+
+  // Enable bypass connection from Left INPUT3 to Left output mixer, note, the
+  // default gain on this input (LI2LOVOL) is -15dB
+  status = wm8960__enableLI2LO();
+
+  // Sets volume control between "left input" to "left output mixer"
+  status = wm8960__setLI2LOVOL(WM8960_OUTPUT_MIXER_GAIN_0DB);
+
+  status = wm8960__enableROMIX(); // Now for the right channel of INPUT3
+  status = wm8960__enableRI2RO();
+  status = wm8960__setRI2ROVOL(WM8960_OUTPUT_MIXER_GAIN_0DB);
+
+  status = wm8960__enableHeadphones();
+  status = wm8960__enableOUT3MIX(); // Provides VMID as buffer for headphone ground
+
+  status = wm8960__setHeadphoneVolumeDB(6.00);
+
  /* USER CODE END 2 */
 
   /* Infinite loop */
