@@ -43,7 +43,7 @@ bool _writeRegisterBit(uint8_t registerAddress, uint8_t bitNumber, bool bitValue
 }
 
 
-int _writeRegisterMultiBits(uint8_t registerAddress, uint8_t settingMsbNum, uint8_t settingLsbNum, uint8_t setting)
+bool _writeRegisterMultiBits(uint8_t registerAddress, uint8_t settingMsbNum, uint8_t settingLsbNum, uint8_t setting)
 {
   uint8_t numOfBits = (settingMsbNum - settingLsbNum) + 1;
 
